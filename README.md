@@ -1,7 +1,6 @@
 # Collections
 
 ## Disclaimer
-The plugin is still in "beta", expect some bugs.
 
 Please send any feedback / suggestions / issues either here ("Issues" tab), or Discord: `seventh0`
 
