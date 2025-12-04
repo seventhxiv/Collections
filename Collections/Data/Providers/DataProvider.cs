@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 
 namespace Collections;
 
@@ -45,6 +47,11 @@ public class DataProvider
     public Dictionary<string, List<ICollectible>> GetCollections()
     {
         return collections.ToDictionary(kv => kv.Value.name, kv => kv.Value.collection);
+    }
+
+    public void RepopulateDataForLoggedInPlayer(IPlayerCharacter player)
+    {
+        InitializeHairstyleCollection(player);
     }
 
     private void PopulateData()
@@ -123,16 +130,56 @@ public class DataProvider
             );
     }
 
-    private void InitializeHairstyleCollection()
+    private void InitializeHairstyleCollection(IPlayerCharacter? player = null)
     {
+        (byte race, byte tribe, byte gender) playerAttributes;
+        
+        if (player is not null)
+        {
+            playerAttributes = (
+               player.Customize[(int)CustomizeIndex.Race],
+               player.Customize[(int)CustomizeIndex.Tribe],
+               player.Customize[(int)CustomizeIndex.Gender]
+           );
+        }
+        else
+        {
+            playerAttributes = (
+               // Hyur
+               1,
+               // Midlander
+               1,
+               // Male
+               0
+           );
+        }
+        
+        var hairMakeTypeOfPlayer = ExcelCache<HairMakeType>
+            .GetSheet()
+            .First(hairMakeType => hairMakeType.Race.RowId == playerAttributes.race
+              && hairMakeType.Tribe.RowId == playerAttributes.tribe
+              && hairMakeType.Gender == playerAttributes.gender
+            );
+        var hairstyleStruct = hairMakeTypeOfPlayer.CharaMakeStruct.First(
+            charaMakeStruct => charaMakeStruct.Menu.Value.Text.ExtractText() == "Hairstyle"
+        );
+        var availableHairstyleRowIds = hairstyleStruct.SubMenuParam.Where(rowId => rowId != 0);
+        
+        var charaMakeCustomizeSheet = ExcelCache<CharaMakeCustomize>.GetSheet();
+
         collections[typeof(HairstyleCollectible)] = (
             HairstyleCollectible.CollectionName,
             4,
-            ExcelCache<CharaMakeCustomize>.GetSheet().AsParallel()
-            .Where(entry => entry.IsPurchasable && (entry.RowId < 100 || (entry.RowId >= 2050 && entry.RowId < 2100)) && (int)entry.Icon != 131094)
-            .Select(entry => (ICollectible)CollectibleCache<HairstyleCollectible, CharaMakeCustomize>.Instance.GetObject(entry))
-            .ToList()
-            );
+            availableHairstyleRowIds
+                .Select(rowId => charaMakeCustomizeSheet.GetRow(rowId))
+                // Remove null values
+                .OfType<CharaMakeCustomize>()
+                .Where(row => row.IsPurchasable)
+                .Select(ICollectible (entry) => 
+                    CollectibleCache<HairstyleCollectible, CharaMakeCustomize>.Instance.GetObject(entry)
+                )
+                .ToList()
+        );
     }
 
     private void InitializeTripleTriadCollection()
