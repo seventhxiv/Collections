@@ -154,30 +154,29 @@ public class DataProvider
            );
         }
         
-        var paramsSheet = ExcelCache<HairMakeType>
+        var hairMakeTypeOfPlayer = ExcelCache<HairMakeType>
             .GetSheet()
             .First(hairMakeType => hairMakeType.Race.RowId == playerAttributes.race
               && hairMakeType.Tribe.RowId == playerAttributes.tribe
               && hairMakeType.Gender == playerAttributes.gender
             );
-        
-        var hairstyleStruct = paramsSheet.CharaMakeStruct.First(
+        var hairstyleStruct = hairMakeTypeOfPlayer.CharaMakeStruct.First(
             charaMakeStruct => charaMakeStruct.Menu.Value.Text.ExtractText() == "Hairstyle"
         );
-
-        var availableHairstyleRowIds = hairstyleStruct.SubMenuParam.Where(rowId => rowId != 0).ToHashSet();
+        var availableHairstyleRowIds = hairstyleStruct.SubMenuParam.Where(rowId => rowId != 0);
+        
+        var charaMakeCustomizeSheet = ExcelCache<CharaMakeCustomize>.GetSheet();
 
         collections[typeof(HairstyleCollectible)] = (
             HairstyleCollectible.CollectionName,
             4,
-            ExcelCache<CharaMakeCustomize>.GetSheet()
-                .AsParallel()
-                .Where(entry => entry.IsPurchasable && availableHairstyleRowIds.Contains(entry.RowId))
-                .Select(entry =>
-                    (ICollectible) CollectibleCache<HairstyleCollectible,
-                        CharaMakeCustomize>.Instance.GetObject(
-                        entry
-                    )
+            availableHairstyleRowIds
+                .Select(rowId => charaMakeCustomizeSheet.GetRow(rowId))
+                // Remove null values
+                .OfType<CharaMakeCustomize>()
+                .Where(row => row.IsPurchasable)
+                .Select(ICollectible (entry) => 
+                    CollectibleCache<HairstyleCollectible, CharaMakeCustomize>.Instance.GetObject(entry)
                 )
                 .ToList()
         );
