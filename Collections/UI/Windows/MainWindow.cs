@@ -6,7 +6,7 @@ public class MainWindow : Window, IDisposable
 {
     public Vector4 originalButtonColor { get; set; }
 
-    private List<(string name, IDrawable window)> tabs { get; init; }
+    private List<(string name, IDrawable window)> tabs { get; set; }
 
     public MainWindow() : base("Collections", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse)
     {
@@ -18,6 +18,14 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(2000, 1000)
         };
 
+        RefreshTabs();
+    }
+
+    public string? forceOpenTab = null;
+    private string previousTabName = String.Empty;
+
+    public void RefreshTabs()
+    {
         tabs = GetCollectionTabs();
         var additionalTabs = new List<(string name, IDrawable window)>()
         {
@@ -29,9 +37,7 @@ public class MainWindow : Window, IDisposable
 
         tabs.AddRange(additionalTabs);
     }
-
-    public string? forceOpenTab = null;
-    private string previousTabName = String.Empty;
+    
     public override void Draw()
     {
         if (ImGui.BeginTabBar("tab-bar", ImGuiTabBarFlags.FittingPolicyScroll | ImGuiTabBarFlags.AutoSelectNewTabs))
