@@ -57,10 +57,30 @@ public class Services
         // Framework ticks
         Framework.Update += WindowsInitializer.MainWindow.OnFrameworkTick;
 
+        ClientState.Login += RefreshCollectionsForPlayer;
+
+        if (ClientState.IsLoggedIn)
+        {
+            RefreshCollectionsForPlayer();
+        }
+
         Dev.Stop();
 
         // DataDebugExporter.ExportCollectionsData();
         // DataDebugExporter.LogDataReport();
+    }
+
+    private static void RefreshCollectionsForPlayer()
+    {
+        // Needs to be in main thread to access local player from ObjectTable.
+        Framework.RunOnFrameworkThread(() =>
+        {
+            if (ObjectTable.LocalPlayer is { } localPlayer)
+            {
+                DataProvider.RepopulateDataForLoggedInPlayer(localPlayer);
+                WindowsInitializer.MainWindow.RefreshTabs();
+            }
+        });
     }
 
     public static void Dispose()
@@ -76,5 +96,7 @@ public class Services
 
         // Dresser
         DresserObserver.Dispose();
+
+        ClientState.Login -= RefreshCollectionsForPlayer;
     }
 }
