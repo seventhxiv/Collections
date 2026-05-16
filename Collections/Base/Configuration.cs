@@ -20,6 +20,8 @@ public class Configuration : IPluginConfiguration
     public bool ForceTryOn = false;
     // Changes left-click behaviour for glamour collections
     public bool SeparatePreviewAndApply = false;
+    // Use a green border to indicate obtained items instead of displaying a checkmark
+    public bool HighVisibilityObtained = false;
 
     public void Save()
     {
