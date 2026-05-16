@@ -1,6 +1,6 @@
 namespace Collections;
 
-// TripleTriadDataGenerator = Used for Triple Triad Collectible Source Lookup 
+// TripleTriadNpcDataGenerator = Used for Triple Triad Collectible Source Lookup 
 // TripleTriadNpcBattleDataGenerator = Used for tracking TT Npc for achievement tracking in `Triad Npc`
 public class TripleTriadNpcBattleDataGenerator : BaseDataGenerator<ENpcResident>
 {
