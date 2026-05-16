@@ -15,6 +15,7 @@ public class ColorsPalette
     public static readonly Vector4 BLUE = new(0.344f, 0.436f, 0.960f, 0.786f);
     public static readonly Vector4 GREEN = new(0.008f, 0.593f, 0.140f, 0.5f);
     public static readonly Vector4 RED = new(0.719f, 0.109f, 0.109f, 0.9f);
+    public static readonly Vector4 LIME_GREEN = new Vector4(0f, 1f, 0f, 1f);
 }
 
 public class UiHelper
