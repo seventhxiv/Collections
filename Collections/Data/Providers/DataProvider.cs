@@ -153,9 +153,8 @@ public class DataProvider
     {
         collections[typeof(TripleTriadNpcCollectible)] = (
             TripleTriadNpcCollectible.CollectionName,
-            5,
-            Services.DataGenerator.SourcesDataGenerator.TripleTriadNpcDataGenerator.data.SelectMany(c => c.Value)
-            .DistinctBy(entry => entry.RowId)
+            6,
+            Services.DataGenerator.SourcesDataGenerator.TripleTriadNpcBattleDataGenerator.data.SelectMany(c => c.Value)
             .Select(entry => (ICollectible)CollectibleCache<TripleTriadNpcCollectible, ENpcResident>.Instance.GetObject(entry))
             .ToList()
             );
@@ -165,7 +164,7 @@ public class DataProvider
     {
         collections[typeof(BardingCollectible)] = (
             BardingCollectible.CollectionName,
-            7,
+            8,
             ExcelCache<BuddyEquip>.GetSheet().AsParallel()
             .Where(entry => entry.Name != "" && !DataOverrides.IgnoreBardingId.Contains(entry.RowId))
             .Select(entry => (ICollectible)CollectibleCache<BardingCollectible, BuddyEquip>.Instance.GetObject(entry))
@@ -177,7 +176,7 @@ public class DataProvider
     {
         collections[typeof(BlueMageCollectible)] = (
             BlueMageCollectible.CollectionName,
-            6,
+            7,
             ExcelCache<Lumina.Excel.Sheets.Action>.GetSheet().AsParallel()
             .Where(entry => entry.ClassJob.RowId == 36 && entry.Name != "")
             .Select(entry => (ICollectible)CollectibleCache<BlueMageCollectible, Lumina.Excel.Sheets.Action>.Instance.GetObject(entry))
@@ -189,7 +188,7 @@ public class DataProvider
     {
         collections[typeof(OrchestrionCollectible)] = (
             OrchestrionCollectible.CollectionName,
-            8,
+            9,
             ExcelCache<Orchestrion>.GetSheet().AsParallel()
             .Where(entry => entry.Name != "" && entry.Name != "0")
             .Select(entry => (ICollectible)CollectibleCache<OrchestrionCollectible, Orchestrion>.Instance.GetObject(entry))
@@ -201,7 +200,7 @@ public class DataProvider
     {
         collections[typeof(OutfitsCollectible)] = (
             OutfitsCollectible.CollectionName,
-            9,
+            10,
             ExcelCache<Item>.GetSheet().AsParallel()
             .Where(entry => entry.LevelEquip >= 1)
             .Where(entry => entry.ItemUICategory.Value.RowId == 112)
@@ -214,7 +213,7 @@ public class DataProvider
     {
         collections[typeof(FramerKitCollectible)] = (
             FramerKitCollectible.CollectionName,
-            10,
+            11,
             ExcelCache<BannerCondition>.GetSheet().AsParallel()
             .Where(entry =>
                 (entry.UnlockType1 == 1 && entry.UnlockType2 == 2 && entry.PrerequisiteType == 0) || // Job Portraits
@@ -233,7 +232,7 @@ public class DataProvider
     {
         collections[typeof(FashionAccessoriesCollectible)] = (
             FashionAccessoriesCollectible.CollectionName,
-            11,
+            12,
             ExcelCache<Ornament>.GetSheet().AsParallel()
             .Where(entry => entry.Icon != 0 && !DataOverrides.IgnoreFashionAccessoryId.Contains(entry.RowId))
             .Select(entry => (ICollectible)CollectibleCache<FashionAccessoriesCollectible, Ornament>.Instance.GetObject(entry))
@@ -245,7 +244,7 @@ public class DataProvider
     {
         collections[typeof(GlassesCollectible)] = (
             GlassesCollectible.CollectionName,
-            12,
+            13,
             ExcelCache<Glasses>.GetSheet().AsParallel()
             .Where(entry => entry.Icon != 0 && entry.Name == entry.Style.Value.Name)
             .Select(entry => (ICollectible)CollectibleCache<GlassesCollectible, Glasses>.Instance.GetObject(entry))
