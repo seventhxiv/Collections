@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Collections.Collectibles.Collectible
 {
     public class TripleTriadNpcCollectible : Collectible<Lumina.Excel.Sheets.ENpcResident>, ICreateable<TripleTriadNpcCollectible, Lumina.Excel.Sheets.ENpcResident>
@@ -49,6 +47,8 @@ namespace Collections.Collectibles.Collectible
 
         protected override decimal GetPatchAdded()
         {
+            // This is guessing Patch based on map expansion.
+            // todo better approach for retrieving Triad NPC quest
             return GetLocation()?.TerritoryType.ExVersion.RowId switch
             {
                 0 => 2.0m,
@@ -77,7 +77,7 @@ namespace Collections.Collectibles.Collectible
             foreach (var npcData in npc.ENpcData)
             {
                 var tripleTriad = tripleTriadSheet.GetRow(npcData.RowId);
-                if (!tripleTriad.HasValue || tripleTriad.Value.Fee == 0)
+                if (!tripleTriad.HasValue)
                 {
                     continue;
                 }
@@ -98,10 +98,65 @@ namespace Collections.Collectibles.Collectible
             return tt.Value;
         }
 
+        private IEnumerable<Quest> GetRequiredQuests()
+        {
+            var tripleTriad = GetTripleTriad();
+            if (tripleTriad is null)
+            {
+                yield break;
+            }
+
+            foreach (var quest in tripleTriad.Value.PreviousQuest)
+            {
+                if (quest.RowId == 0)
+                {
+                    continue;
+                }
+
+                yield return quest.Value;
+            }
+        }
+
         private Location? GetLocation()
         {
             var hasValue = Services.DataGenerator.NpcLocationDataGenerator.npcToLocation.TryGetValue(ExcelRow.RowId, out var location);
             return hasValue ? location : null;
+        }
+
+        public override void DrawAdditionalTooltip()
+        {
+            var location = GetLocation();
+            var quests = GetRequiredQuests().ToList();
+
+            if (ImGui.BeginTable($"##tt-npc-{ExcelRow.RowId}-additional-tooltip", 2, ImGuiTableFlags.NoHostExtendX))
+            {
+                ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, UiHelper.UnitWidth() * 14);
+                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
+
+                if (location is not null)
+                {
+                    DrawTooltipRow("Map", location.TerritoryType.PlaceName.Value.Name.ToString());
+                    DrawTooltipRow("Location", $"X:{location.Xmap:F1} Y:{location.Ymap:F1}");
+                }
+
+                if (quests.Count > 0)
+                {
+                    DrawTooltipRow(quests.Count == 1 ? "Quest Req" : "Quests Req", string.Join("\n", quests.Select(quest => quest.Name.ToString())));
+                }
+
+                ImGui.EndTable();
+            }
+        }
+
+        private static void DrawTooltipRow(string label, string value)
+        {
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            ImGui.TextColored(ColorsPalette.GREY2, label);
+            ImGui.TableNextColumn();
+            ImGui.PushTextWrapPos(UiHelper.UnitWidth() * 50);
+            ImGui.TextUnformatted(value);
+            ImGui.PopTextWrapPos();
         }
     }
 }
