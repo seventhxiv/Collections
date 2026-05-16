@@ -1,6 +1,3 @@
-using System.Drawing;
-using Dalamud.Interface.Colors;
-
 namespace Collections;
 
 public class CollectionWidget
@@ -270,8 +267,11 @@ public class CollectionWidget
     private unsafe void DrawItem(ICollectible collectible)
     {
         // for debouncing, prevents interaction and favorite at the same time.
-        bool interact = false;
-        bool debounce = false;
+        var interact = false;
+        var debounce = false;
+
+        // to show red/green border instead of checkmark
+        var showObtainedBorders = Services.Configuration.HighVisibilityObtained;
 
         // to properly draw everything
         var icon = collectible.GetIcon();
@@ -285,6 +285,21 @@ public class CollectionWidget
         {
             interact = true;
         }
+
+
+        if (showObtainedBorders)
+        {
+            var obtainedColor = collectible.GetIsObtained() ? ColorsPalette.LIME_GREEN : ColorsPalette.RED;
+
+            // offset to compensate the frame padding 
+            const float borderOffset = 2f;
+            var min = ImGui.GetItemRectMin() + new Vector2(borderOffset, borderOffset);
+            var max = ImGui.GetItemRectMax() - new Vector2(borderOffset, borderOffset);
+
+            // Draw border
+            ImGui.GetWindowDrawList().AddRect(min, max, ImGui.ColorConvertFloat4ToU32(obtainedColor), 8f, ImDrawFlags.None, 2f);
+        }
+
 
         // for rendering additional content ontop of Icons 
         if (Services.Configuration.AdditionalTooltips.Contains(collectible.GetCollectionName()))
@@ -353,12 +368,16 @@ public class CollectionWidget
                 }
             }
         }
-        
-        // Mimicks the official FFXIV Yellow checkmark
-        var obtained = collectible.GetIsObtained();
-        // color
-        // UiHelper.IconButtonWithOffset(drawItemCount, FontAwesomeIcon.Check, iconSize, 0, ref obtained, 1.0f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
-        UiHelper.IconButtonWithOffset(drawItemCount, FontAwesomeIcon.Check, ImGui.GetStyle().ItemSpacing.X * 2 + ImGui.GetFontSize(), -iconSizeScaled + ImGui.GetFontSize(), ref obtained, 1.0f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
+
+        // Checkmark
+        if (!showObtainedBorders)
+        {
+            // Mimicks the official FFXIV Yellow checkmark
+            var obtained = collectible.GetIsObtained();
+            // color
+            // UiHelper.IconButtonWithOffset(drawItemCount, FontAwesomeIcon.Check, iconSize, 0, ref obtained, 1.0f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
+            UiHelper.IconButtonWithOffset(drawItemCount, FontAwesomeIcon.Check, ImGui.GetStyle().ItemSpacing.X * 2 + ImGui.GetFontSize(), -iconSizeScaled + ImGui.GetFontSize(), ref obtained, 1.0f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
+        }
     }
 
     private int GetIconsPerRow()
