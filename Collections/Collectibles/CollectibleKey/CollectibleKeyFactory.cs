@@ -60,6 +60,13 @@ public class CollectibleKeyFactory
                 return new MonsterKey((monster, false));
             }
         }
+
+        if (type == typeof(ENpcResident))
+        {
+            var npc = (ENpcResident)(object)collectible.ExcelRow;
+            return CollectibleKeyCache<TripleTriadNpcKey, ENpcResident>.Instance.GetObject((npc, (int)id));
+        }
+
         return null;
     }
 }

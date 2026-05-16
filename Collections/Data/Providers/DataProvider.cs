@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Collections.Collectibles.Collectible;
 
 namespace Collections;
 
@@ -64,6 +65,7 @@ public class DataProvider
         InitializeEmoteCollection();
         InitializeHairstyleCollection();
         InitializeTripleTriadCollection();
+        InitializeTripleTriadNpcCollection();
         InitializeBlueMageCollection();
         InitializeBardingCollection();
         InitializeOrchestrionRollCollection();
@@ -147,6 +149,18 @@ public class DataProvider
             );
     }
 
+    private void InitializeTripleTriadNpcCollection()
+    {
+        collections[typeof(TripleTriadNpcCollectible)] = (
+            TripleTriadNpcCollectible.CollectionName,
+            5,
+            Services.DataGenerator.SourcesDataGenerator.TripleTriadNpcDataGenerator.data.SelectMany(c => c.Value)
+            .DistinctBy(entry => entry.RowId)
+            .Select(entry => (ICollectible)CollectibleCache<TripleTriadNpcCollectible, ENpcResident>.Instance.GetObject(entry))
+            .ToList()
+            );
+    }
+
     private void InitializeBardingCollection()
     {
         collections[typeof(BardingCollectible)] = (
@@ -226,6 +240,7 @@ public class DataProvider
             .ToList()
             );
     }
+
     private void InitializeGlassesCollection()
     {
         collections[typeof(GlassesCollectible)] = (

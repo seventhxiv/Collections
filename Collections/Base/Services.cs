@@ -18,6 +18,7 @@ public class Services
     [PluginService] public static ITextureProvider TextureProvider { get; private set; }
     [PluginService] public static IDutyState DutyState { get; private set; }
     [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; }
+    [PluginService] public static ISigScanner SigScanner { get; private set; }
 
     public static Plugin Plugin { get; private set; }
     public static Configuration Configuration { get; private set; }
