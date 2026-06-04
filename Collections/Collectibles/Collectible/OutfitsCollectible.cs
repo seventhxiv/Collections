@@ -3,6 +3,11 @@ namespace Collections;
 public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollectible, Item>
 {
     public new static string CollectionName => "Outfits";
+    private bool outfitCompletionInitialized = false;
+
+    //For showing collected number in text overlay
+    private int outfitCount = 0;
+    private int outfitMax = 0;
 
     public OutfitsCollectible(Item excelRow) : base(excelRow)
     {
@@ -63,6 +68,22 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
         }
     }
 
+    public override void DrawAdditionalIconOverlay()
+    {
+        if (!outfitCompletionInitialized)
+        {
+            UpdateOutfitCompletionState();
+        }
+
+        if (outfitMax == 0 || isObtained)
+        {
+            return;
+        }
+
+        var color = outfitMax == outfitCount ? ColorsPalette.YELLOW : ColorsPalette.WHITE;
+        UiHelper.WriteTextOverlay($"{outfitCount}/{outfitMax}", color, ColorsPalette.BLACK);
+    }
+
     protected override HintModule GetSecondaryHint()
     {
         if (this.CollectibleKey == null) return base.GetSecondaryHint();
@@ -72,6 +93,17 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
     public override void UpdateObtainedState()
     {
         isObtained = Services.ItemFinder.IsItemInDresser(ExcelRow.RowId);
+        UpdateOutfitCompletionState();
+    }
+
+    private void UpdateOutfitCompletionState()
+    {
+        var outfitItemIds = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
+        outfitMax = outfitItemIds.Count;
+        outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInInventory(itemId) || 
+                                                    Services.ItemFinder.IsItemInArmoireCache(itemId) || 
+                                                    Services.ItemFinder.IsItemInDresser(itemId, true));
+        outfitCompletionInitialized = true;
     }
 
     protected override int GetIconId()

@@ -286,6 +286,13 @@ public class CollectionWidget
             interact = true;
         }
 
+        // for rendering additional content ontop of Icons 
+        if (Services.Configuration.AdditionalTooltips.Contains(collectible.GetCollectionName()))
+        {
+            collectible.DrawAdditionalIconOverlay();
+        }
+        
+
         // Details on hover
         if (ImGui.IsItemHovered())
         {

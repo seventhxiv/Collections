@@ -92,7 +92,7 @@ public class OutfitsTab : IDrawable
         ImGui.SameLine();
         ImGui.BeginGroup();
 
-        CollectionWidget.Draw(filteredCollection);
+        CollectionWidget.Draw(filteredCollection); 
         //ImGui.Text("");
 
         ImGui.EndGroup();
