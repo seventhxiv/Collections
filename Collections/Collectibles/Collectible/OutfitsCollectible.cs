@@ -78,7 +78,6 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
 
     private bool GetOutfitSubItemObtained(uint itemId, HashSet<uint> outfitDresserItemIds)
     {
-
         return outfitDresserItemIds.Contains(itemId) ||
             Services.ItemFinder.IsItemInInventory(itemId) ||
             Services.ItemFinder.IsItemInArmoireCache(itemId) ||
@@ -93,6 +92,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
         }
 
         var isCompleteSet = outfitMax == outfitCount;
+        var isOutfitInDresser = Services.ItemFinder.IsItemInDresser(ExcelRow.RowId);
 
 
         // Not an outfit
@@ -101,7 +101,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
             return;
         }
 
-        if (isCompleteSet)
+        if (isCompleteSet && isOutfitInDresser)
         {
             return;
         }
