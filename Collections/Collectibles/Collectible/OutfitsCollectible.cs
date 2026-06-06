@@ -58,7 +58,8 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                 }
                 var finalPos = ImGui.GetCursorPos();
                 c.UpdateObtainedState();
-                if (c.GetIsObtained())
+                var obtained = Services.ItemFinder.IsItemInDresser(c.Id);
+                if (obtained)
                 {
                     var _ = true;
                     UiHelper.IconButtonWithOffset(i, FontAwesomeIcon.Check, ImGui.GetFontSize() + (ImGui.ImGuiStyle().ItemSpacing.X * (17 / ImGui.GetFontSize())), -iconSize + ImGui.GetFontSize(), ref _, .735f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
@@ -75,12 +76,14 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
             UpdateOutfitCompletionState();
         }
 
-        if (outfitMax == 0 || isObtained)
+        var isCompleteSet = outfitMax == outfitCount;
+
+        if (outfitMax == 0 || (isObtained && isCompleteSet))
         {
             return;
         }
 
-        var color = outfitMax == outfitCount ? ColorsPalette.YELLOW : ColorsPalette.WHITE;
+        var color = isCompleteSet ? ColorsPalette.YELLOW : ColorsPalette.WHITE;
         UiHelper.WriteTextOverlay($"{outfitCount}/{outfitMax}", color, ColorsPalette.BLACK);
     }
 
@@ -102,7 +105,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
         outfitMax = outfitItemIds.Count;
         outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInInventory(itemId) || 
                                                     Services.ItemFinder.IsItemInArmoireCache(itemId) || 
-                                                    Services.ItemFinder.IsItemInDresser(itemId, true));
+                                                    Services.ItemFinder.IsItemInDresser(itemId));
         outfitCompletionInitialized = true;
     }
 
