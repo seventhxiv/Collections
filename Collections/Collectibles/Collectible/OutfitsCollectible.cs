@@ -42,8 +42,6 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
 
     public override void DrawAdditionalTooltip()
     {
-        UpdateObtainedState();
-
         var items = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
         var collectibles = Services.DataProvider.GetCollection<GlamourCollectible>()?.Where(c => items.Contains(c.Id)).ToList();
         if (collectibles is null)
@@ -51,6 +49,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
             return;
         }
 
+        var outfitDresserItemIds = Services.ItemFinder.ItemIdsObtainedInOutfit(ExcelRow.RowId).ToHashSet();
         var iconSize = UiHelper.ScaleForFontSize(50);
         for(var i = 0; i < collectibles.Count; i++)
         {
@@ -65,7 +64,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                 }
                 var finalPos = ImGui.GetCursorPos();
 
-                var obtained = GetOutfitSubItemObtained(c.Id);
+                var obtained = GetOutfitSubItemObtained(c.Id, outfitDresserItemIds);
 
                 if (obtained)
                 {
@@ -77,20 +76,11 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
         }
     }
 
-    private bool GetOutfitSubItemObtained(uint itemId)
+    private bool GetOutfitSubItemObtained(uint itemId, HashSet<uint> outfitDresserItemIds)
     {
-        // Complete outfit set will have outfitCount == 0
-        if (isObtained && outfitCount == 0)
-        {
-            return true;
-        }
 
-        if (isObtained)
-        {
-            return Services.ItemFinder.IsItemInDresser(itemId, false);
-        }
-
-        return Services.ItemFinder.IsItemInInventory(itemId) ||
+        return outfitDresserItemIds.Contains(itemId) ||
+            Services.ItemFinder.IsItemInInventory(itemId) ||
             Services.ItemFinder.IsItemInArmoireCache(itemId) ||
             Services.ItemFinder.IsItemInDresser(itemId);
     }
@@ -111,8 +101,7 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
             return;
         }
 
-        // Obtained and Complete Set
-        if (isObtained && outfitCount == 0)
+        if (isCompleteSet)
         {
             return;
         }
@@ -136,15 +125,9 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
     private void UpdateOutfitCompletionState()
     {
         var outfitItemIds = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
+        var outfitDresserItemIds = Services.ItemFinder.ItemIdsObtainedInOutfit(ExcelRow.RowId).ToHashSet();
         outfitMax = outfitItemIds.Count;
-        outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInInventory(itemId) || 
-                                                    Services.ItemFinder.IsItemInArmoireCache(itemId) || 
-                                                    Services.ItemFinder.IsItemInDresser(itemId));
-        // reset count when item is already an Outfit
-        if (isObtained)
-        {
-            outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInDresser(itemId, false));
-        }
+        outfitCount = outfitItemIds.Count(itemId => GetOutfitSubItemObtained(itemId, outfitDresserItemIds));
 
         outfitCompletionInitialized = true;
     }

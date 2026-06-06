@@ -9,6 +9,7 @@ public class Configuration : IPluginConfiguration
     public Dictionary<string, HashSet<uint>> Wishlist = new();
     public HashSet<uint> WishListed = new();
     public List<uint> DresserItemIds = new();
+    public List<ushort> DresserItemSetUnlockBits = new();
     public List<uint> ArmoireItemIds = new();
     public List<string> AdditionalTooltips = new();
     public GlamourTree GlamourTree = new();
