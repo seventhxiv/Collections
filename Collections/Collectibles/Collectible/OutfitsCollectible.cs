@@ -42,10 +42,17 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
 
     public override void DrawAdditionalTooltip()
     {
+        UpdateObtainedState();
+
         var items = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
         var collectibles = Services.DataProvider.GetCollection<GlamourCollectible>()?.Where(c => items.Contains(c.Id)).ToList();
+        if (collectibles is null)
+        {
+            return;
+        }
+
         var iconSize = UiHelper.ScaleForFontSize(50);
-        for(int i = 0; i < collectibles?.Count; i++)
+        for(var i = 0; i < collectibles.Count; i++)
         {
             var c = collectibles[i];
             var icon = c.GetIcon();
@@ -57,8 +64,9 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                     ImGui.SameLine();
                 }
                 var finalPos = ImGui.GetCursorPos();
-                c.UpdateObtainedState();
-                var obtained = Services.ItemFinder.IsItemInDresser(c.Id);
+
+                var obtained = GetOutfitSubItemObtained(c.Id);
+
                 if (obtained)
                 {
                     var _ = true;
@@ -67,6 +75,24 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                 }
             }
         }
+    }
+
+    private bool GetOutfitSubItemObtained(uint itemId)
+    {
+        // Complete outfit set will have outfitCount == 0
+        if (isObtained && outfitCount == 0)
+        {
+            return true;
+        }
+
+        if (isObtained)
+        {
+            return Services.ItemFinder.IsItemInDresser(itemId, false);
+        }
+
+        return Services.ItemFinder.IsItemInInventory(itemId) ||
+            Services.ItemFinder.IsItemInArmoireCache(itemId) ||
+            Services.ItemFinder.IsItemInDresser(itemId);
     }
 
     public override void DrawAdditionalIconOverlay()
