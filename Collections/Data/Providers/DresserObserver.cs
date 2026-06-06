@@ -74,13 +74,16 @@ public unsafe class DresserObserver
 
         for (var i = 0; i < DRESSER_ITEM_LIMIT; i++)
         {
-            var itemId = itemFinderModule != null ? itemFinderModule->GlamourDresserItemIds[i] : MirageManager->PrismBoxItemIds[i];
+            var itemId = MirageManager->PrismBoxItemIds[i];
             if (itemId == 0)
                 continue;
 
             var pureItemId = Services.ItemFinder.GetPureItemId(itemId);
+            var itemFinderItemId = itemFinderModule != null ? itemFinderModule->GlamourDresserItemIds[i] : 0;
+            var itemFinderPureItemId = Services.ItemFinder.GetPureItemId(itemFinderItemId);
+
             DresserItemIds.Add(pureItemId);
-            DresserItemSetUnlockBits.Add(itemFinderModule != null ? itemFinderModule->GlamourDresserItemSetUnlockBits[i] : (ushort)0);
+            DresserItemSetUnlockBits.Add(itemFinderPureItemId == pureItemId ? itemFinderModule->GlamourDresserItemSetUnlockBits[i] : (ushort)0);
         }
 
         Dev.Log($"Refreshing Dresser contents count: {initialItemCount} -> {DresserItemIds.Count}");
