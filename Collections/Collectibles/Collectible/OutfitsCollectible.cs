@@ -78,7 +78,15 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
 
         var isCompleteSet = outfitMax == outfitCount;
 
-        if (outfitMax == 0 || (isObtained && isCompleteSet))
+
+        // Not an outfit
+        if (outfitMax == 0)
+        {
+            return;
+        }
+
+        // Obtained and Complete Set
+        if (isObtained && outfitCount == 0)
         {
             return;
         }
@@ -106,6 +114,12 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
         outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInInventory(itemId) || 
                                                     Services.ItemFinder.IsItemInArmoireCache(itemId) || 
                                                     Services.ItemFinder.IsItemInDresser(itemId));
+        // reset count when item is already an Outfit
+        if (isObtained)
+        {
+            outfitCount = outfitItemIds.Count(itemId => Services.ItemFinder.IsItemInDresser(itemId, false));
+        }
+
         outfitCompletionInitialized = true;
     }
 
