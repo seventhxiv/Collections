@@ -28,7 +28,7 @@ class EquipSlotConverter
         {
             case EquipSlot.MainHand: return WeaponSlot.MainHand;
             case EquipSlot.OffHand: return WeaponSlot.OffHand;
-            default: return WeaponSlot.Unk;
+            default: return WeaponSlot.System;
         }
     }
 
