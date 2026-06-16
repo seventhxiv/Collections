@@ -1,11 +1,13 @@
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace Collections;
 
 public unsafe class DresserObserver
 {
     public List<uint> DresserItemIds;
+    public List<ushort> DresserItemSetUnlockBits;
     public List<uint> ArmoireItemIds;
 
     private static MirageManager* MirageManager => FFXIVClientStructs.FFXIV.Client.Game.MirageManager.Instance();
@@ -66,14 +68,22 @@ public unsafe class DresserObserver
     {
         var initialItemCount = DresserItemIds.Count;
         DresserItemIds.Clear();
+        DresserItemSetUnlockBits.Clear();
 
-        foreach (var itemId in MirageManager->PrismBoxItemIds)
+        var itemFinderModule = UIModule.Instance()->GetItemFinderModule();
+
+        for (var i = 0; i < DRESSER_ITEM_LIMIT; i++)
         {
+            var itemId = MirageManager->PrismBoxItemIds[i];
             if (itemId == 0)
                 continue;
 
             var pureItemId = Services.ItemFinder.GetPureItemId(itemId);
+            var itemFinderItemId = itemFinderModule != null ? itemFinderModule->GlamourDresserItemIds[i] : 0;
+            var itemFinderPureItemId = Services.ItemFinder.GetPureItemId(itemFinderItemId);
+
             DresserItemIds.Add(pureItemId);
+            DresserItemSetUnlockBits.Add(itemFinderPureItemId == pureItemId ? itemFinderModule->GlamourDresserItemSetUnlockBits[i] : (ushort)0);
         }
 
         Dev.Log($"Refreshing Dresser contents count: {initialItemCount} -> {DresserItemIds.Count}");
@@ -104,12 +114,18 @@ public unsafe class DresserObserver
     private void InitializeContentsFromConfiguration()
     {
         DresserItemIds = Services.Configuration.DresserItemIds;
+        DresserItemSetUnlockBits = Services.Configuration.DresserItemSetUnlockBits;
+        while (DresserItemSetUnlockBits.Count < DresserItemIds.Count)
+        {
+            DresserItemSetUnlockBits.Add(0);
+        }
         ArmoireItemIds = Services.Configuration.ArmoireItemIds;
     }
 
     private void SaveDresserContentsInConfiguration()
     {
         Services.Configuration.DresserItemIds = DresserItemIds;
+        Services.Configuration.DresserItemSetUnlockBits = DresserItemSetUnlockBits;
         Services.Configuration.Save();
     }
 

@@ -3,6 +3,11 @@ namespace Collections;
 public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollectible, Item>
 {
     public new static string CollectionName => "Outfits";
+    private bool outfitCompletionInitialized = false;
+
+    //For showing collected number in text overlay
+    private int outfitCount = 0;
+    private int outfitMax = 0;
 
     public OutfitsCollectible(Item excelRow) : base(excelRow)
     {
@@ -39,8 +44,14 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
     {
         var items = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
         var collectibles = Services.DataProvider.GetCollection<GlamourCollectible>()?.Where(c => items.Contains(c.Id)).ToList();
+        if (collectibles is null)
+        {
+            return;
+        }
+
+        var outfitDresserItemIds = Services.ItemFinder.ItemIdsObtainedInOutfit(ExcelRow.RowId).ToHashSet();
         var iconSize = UiHelper.ScaleForFontSize(50);
-        for(int i = 0; i < collectibles?.Count; i++)
+        for(var i = 0; i < collectibles.Count; i++)
         {
             var c = collectibles[i];
             var icon = c.GetIcon();
@@ -52,8 +63,10 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                     ImGui.SameLine();
                 }
                 var finalPos = ImGui.GetCursorPos();
-                c.UpdateObtainedState();
-                if (c.GetIsObtained())
+
+                var obtained = GetOutfitSubItemObtained(c.Id, outfitDresserItemIds);
+
+                if (obtained)
                 {
                     var _ = true;
                     UiHelper.IconButtonWithOffset(i, FontAwesomeIcon.Check, ImGui.GetFontSize() + (ImGui.ImGuiStyle().ItemSpacing.X * (17 / ImGui.GetFontSize())), -iconSize + ImGui.GetFontSize(), ref _, .735f, new Vector4(1f, .741f, .188f, 1), ColorsPalette.BLACK.WithAlpha(0));
@@ -61,6 +74,40 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
                 }
             }
         }
+    }
+
+    private bool GetOutfitSubItemObtained(uint itemId, HashSet<uint> outfitDresserItemIds)
+    {
+        return outfitDresserItemIds.Contains(itemId) ||
+            Services.ItemFinder.IsItemInInventory(itemId) ||
+            Services.ItemFinder.IsItemInArmoireCache(itemId) ||
+            Services.ItemFinder.IsItemInDresser(itemId);
+    }
+
+    public override void DrawAdditionalIconOverlay()
+    {
+        if (!outfitCompletionInitialized)
+        {
+            UpdateOutfitCompletionState();
+        }
+
+        var isCompleteSet = outfitMax == outfitCount;
+        var isOutfitInDresser = Services.ItemFinder.IsItemInDresser(ExcelRow.RowId);
+
+
+        // Not an outfit
+        if (outfitMax == 0)
+        {
+            return;
+        }
+
+        if (isCompleteSet && isOutfitInDresser)
+        {
+            return;
+        }
+
+        var color = isCompleteSet ? ColorsPalette.YELLOW : ColorsPalette.WHITE;
+        UiHelper.WriteTextOverlay($"{outfitCount}/{outfitMax}", color, ColorsPalette.BLACK);
     }
 
     protected override HintModule GetSecondaryHint()
@@ -72,6 +119,17 @@ public class OutfitsCollectible : Collectible<Item>, ICreateable<OutfitsCollecti
     public override void UpdateObtainedState()
     {
         isObtained = Services.ItemFinder.IsItemInDresser(ExcelRow.RowId);
+        UpdateOutfitCompletionState();
+    }
+
+    private void UpdateOutfitCompletionState()
+    {
+        var outfitItemIds = Services.ItemFinder.ItemIdsInOutfit(ExcelRow.RowId);
+        var outfitDresserItemIds = Services.ItemFinder.ItemIdsObtainedInOutfit(ExcelRow.RowId).ToHashSet();
+        outfitMax = outfitItemIds.Count;
+        outfitCount = outfitItemIds.Count(itemId => GetOutfitSubItemObtained(itemId, outfitDresserItemIds));
+
+        outfitCompletionInitialized = true;
     }
 
     protected override int GetIconId()

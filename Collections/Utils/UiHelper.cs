@@ -233,4 +233,23 @@ public class UiHelper
     {
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), 0xFF00FF00, 0.5f);
     }
+
+    public static void WriteTextOverlay(string text, Vector4? textColor = null, Vector4? backgroundColor = null, float padding = 4f)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+
+        var min = ImGui.GetItemRectMin();
+        var max = ImGui.GetItemRectMax();
+
+        var textSize = ImGui.CalcTextSize(text);
+
+        var pos = new Vector2(min.X + padding, max.Y - textSize.Y - padding);
+
+        if (backgroundColor.HasValue)
+        {
+            drawList.AddRectFilled(pos - new Vector2(3, 2), pos + textSize + new Vector2(3, 2), ImGui.GetColorU32(backgroundColor.Value));
+        }
+
+        drawList.AddText(pos, ImGui.GetColorU32(textColor ?? Vector4.One), text);
+    }
 }

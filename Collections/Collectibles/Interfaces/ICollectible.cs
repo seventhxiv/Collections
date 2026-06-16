@@ -18,6 +18,7 @@ public interface ICollectible
     public void UpdateObtainedState();
     public ISharedImmediateTexture GetIcon();
     public void DrawAdditionalTooltip();
+    public void DrawAdditionalIconOverlay();
     public void Interact();
     public string GetDisplayName();
     public string GetCollectionName();

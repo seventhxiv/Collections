@@ -50,7 +50,9 @@ public unsafe class PreviewExecutor
         }
         else
         {
-            if (EquipSlotConverter.EquipSlotToWeaponSlot(equipSlot) != DrawDataContainer.WeaponSlot.Unk)
+            // https://github.com/aers/FFXIVClientStructs/commit/fb7efd14f3ec67cd2c12a7f02ca4852254c6fd18
+            // Unk Enum was replaced with System
+            if (EquipSlotConverter.EquipSlotToWeaponSlot(equipSlot) != DrawDataContainer.WeaponSlot.System)
             {
                 var weapon = Character->DrawData.Weapon(EquipSlotConverter.EquipSlotToWeaponSlot(equipSlot)).ModelId;
                 PreviewWeapon(equipSlot, GetWeaponModelId(weapon, (byte)stain0Id, (byte)stain1Id));

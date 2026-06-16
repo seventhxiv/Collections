@@ -28,7 +28,7 @@ public unsafe class ItemFinder
     public bool IsItemInDresser(uint itemId, bool checkOutfits = false)
     {
         var pureItemId = GetPureItemId(itemId);
-        return Services.DresserObserver.DresserItemIds.Contains(pureItemId) || (checkOutfits && OutfitsContainingItem(pureItemId).Any(Services.DresserObserver.DresserItemIds.Contains));
+        return Services.DresserObserver.DresserItemIds.Contains(pureItemId) || (checkOutfits && OutfitsContainingItem(pureItemId).Any(outfitId => IsItemInDresserOutfit(outfitId, pureItemId)));
     }
 
     public List<uint> OutfitsContainingItem(uint itemId)
@@ -55,28 +55,79 @@ public unsafe class ItemFinder
     // and it's more convenient to store it internally like a GlamourCollectible.
     public List<uint> ItemIdsInOutfit(uint itemId)
     {
-        List<uint> associatedItems = [];
-        var outfitSet = ExcelCache<MirageStoreSetItem>.GetSheet().GetRow(itemId);
-        if (outfitSet is not null)
+        return ItemIdSlotsInOutfit(itemId).Select(item => item.Id).ToList();
+    }
+
+    public List<uint> ItemIdsObtainedInOutfit(uint outfitId)
+    {
+        var unlockBits = GetDresserOutfitSetUnlockBits(outfitId);
+        if (unlockBits is null)
         {
-            var related = outfitSet.Value;
-            associatedItems = [
-                related.MainHand.RowId,
-                related.OffHand.RowId,
-                related.Head.RowId,
-                related.Body.RowId,
-                related.Hands.RowId,
-                related.Legs.RowId,
-                related.Feet.RowId,
-                related.Earrings.RowId,
-                related.Necklace.RowId,
-                related.Bracelets.RowId,
-                related.Ring.RowId,
-            ];
-            associatedItems = associatedItems.Where(id => id != 0).ToList();
+            return [];
         }
 
-        return associatedItems;
+        // outfits in the dresser can now be partial. so check the slot bits
+        return ItemIdSlotsInOutfit(outfitId)
+            .Where(item => IsOutfitSlotUnlocked(unlockBits.Value, item.Slot))
+            .Select(item => item.Id)
+            .ToList();
+    }
+
+    public bool IsItemInDresserOutfit(uint outfitId, uint itemId)
+    {
+        var pureItemId = GetPureItemId(itemId);
+        var unlockBits = GetDresserOutfitSetUnlockBits(outfitId);
+        if (unlockBits is null)
+        {
+            return false;
+        }
+
+        return ItemIdSlotsInOutfit(outfitId).Any(item => item.Id == pureItemId && IsOutfitSlotUnlocked(unlockBits.Value, item.Slot));
+    }
+
+    private List<(uint Id, int Slot)> ItemIdSlotsInOutfit(uint itemId)
+    {
+        var outfitSet = ExcelCache<MirageStoreSetItem>.GetSheet().GetRow(itemId);
+        if (outfitSet is null)
+        {
+            return [];
+        }
+
+        var related = outfitSet.Value;
+        // slot order matches the dresser outfit bitmask
+        List<(uint Id, int Slot)> items = [
+            (related.MainHand.RowId, 0),
+            (related.OffHand.RowId, 1),
+            (related.Head.RowId, 2),
+            (related.Body.RowId, 3),
+            (related.Hands.RowId, 4),
+            (related.Legs.RowId, 5),
+            (related.Feet.RowId, 6),
+            (related.Earrings.RowId, 7),
+            (related.Necklace.RowId, 8),
+            (related.Bracelets.RowId, 9),
+            (related.Ring.RowId, 10),
+        ];
+
+        return items.Where(item => item.Id != 0).ToList();
+    }
+
+    private ushort? GetDresserOutfitSetUnlockBits(uint outfitId)
+    {
+        var pureOutfitId = GetPureItemId(outfitId);
+        var index = Services.DresserObserver.DresserItemIds.IndexOf(pureOutfitId);
+        if (index < 0 || index >= Services.DresserObserver.DresserItemSetUnlockBits.Count)
+        {
+            return null;
+        }
+
+        return Services.DresserObserver.DresserItemSetUnlockBits[index];
+    }
+
+    private bool IsOutfitSlotUnlocked(ushort unlockBits, int slot)
+    {
+        // bit set means missing, bit clear means collected
+        return (unlockBits & (1 << slot)) == 0;
     }
 
     // Helper function to find the actual item refs stored within an outfit
