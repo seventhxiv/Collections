@@ -301,6 +301,22 @@ public class CollectionWidget
         }
 
 
+
+
+        if (showObtainedBorders)
+        {
+            var obtainedColor = collectible.GetIsObtained() ? ColorsPalette.LIME_GREEN : ColorsPalette.RED;
+
+            // offset to compensate the frame padding 
+            const float borderOffset = 2f;
+            var min = ImGui.GetItemRectMin() + new Vector2(borderOffset, borderOffset);
+            var max = ImGui.GetItemRectMax() - new Vector2(borderOffset, borderOffset);
+
+            // Draw border
+            ImGui.GetWindowDrawList().AddRect(min, max, ImGui.ColorConvertFloat4ToU32(obtainedColor), 8f, ImDrawFlags.None, 2f);
+        }
+
+
         // for rendering additional content ontop of Icons 
         if (Services.Configuration.AdditionalTooltips.Contains(collectible.GetCollectionName()))
         {
